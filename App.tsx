@@ -28,6 +28,8 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import { NumberView } from './NumberView';
+import { Operator } from './Operator';
+import { SpecialButton } from './SpecialButton';
 
 const Section: React.FC<
   PropsWithChildren<{
@@ -67,37 +69,60 @@ const App = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const [current, setCurrent] = useState<String>("0");  
+  const [current, setCurrent] = useState<String | undefined>(undefined);  
   const [lastNumber, setLastNumber] = useState<String>("");  
-  const [lastOperand, setLastOperand] = useState<String | undefined>(undefined);  
+  const [lastOperator, setLastOperator] = useState<String | undefined>(undefined);  
 
   const [shown, setShown] = useState<String>("0");
 
 
-
-const Operand = (props: {title: string}) => {
-  return (
-  <View style={styles.buttonContainer}>
-    <Button color = "#889186"title={props.title} onPress = {() => onOperand(props.title)}/>
-  </View>)
-}
-
-function onOperand(operand:String) {
-  console.log("current", current);
-  console.log("last", lastNumber);
+function onOperator(operator:String) {
+    if(lastNumber == "" && lastOperator == undefined) {
+      if(operator == "-") {
+        setLastNumber("-");
+        setShown("-");
+        return;
+      }
+      else {
+        return;
+      }
+    }
+    if(lastNumber == '') {
+      if(operator == "-") {
+        setLastNumber("-");
+        setShown("-");
+        return;
+      }
+      else{
+      setLastOperator(operator);
+      setShown(current + " " + operator);
+      return;
+      }
+    }
   
-    if(lastOperand == undefined) {
+    if(lastOperator == undefined) {
       setCurrent(lastNumber);
-      setLastOperand(operand);
-      setShown(''+ shown + operand);
+      setLastOperator(operator);
+      setShown(''+ shown + " " + operator);
       setLastNumber('');
     }
     else {
-      let newNumber = String(Number(current)+ Number(lastNumber));
-      console.log("new", newNumber);
+      let newNumber : String | undefined = undefined;
+      if(lastOperator == "+"){
+        newNumber = String(Number(current) + Number(lastNumber));
+      }
+      if(lastOperator == "*"){
+        newNumber = String(Number(current) * Number(lastNumber));
+      }
+      if(lastOperator == "-"){
+        newNumber = String(Number(current) - Number(lastNumber));
+      }
+      if(lastOperator == "/"){
+        newNumber = String(Number(current) / Number(lastNumber));
+      }
       setCurrent(newNumber);
-      setLastOperand(operand);
-      setShown(newNumber);
+      setLastOperator(operator);
+      setShown(newNumber + " " + operator);
       setLastNumber('');
     }
 }
@@ -106,6 +131,40 @@ function onNumber(number:String) {
   let newNumber = String(lastNumber)+String(number)
   setLastNumber(newNumber);
   setShown(newNumber);
+}
+
+function onClear() {
+  setLastNumber("");
+  setCurrent(undefined);
+  setLastOperator(undefined);
+  setShown("0");
+}
+
+function onEquality() {
+  let newNumber : String = "";
+
+  if (lastOperator == undefined) {
+      newNumber = String(Number(lastNumber) * 2);
+      setCurrent(newNumber);
+      setShown(newNumber);
+      setLastNumber(newNumber);
+      return;
+  }
+  if (lastOperator == "+") {
+    newNumber = String(Number(current) + Number(lastNumber));
+  }
+  if (lastOperator == "*") {
+    newNumber = String(Number(current) * Number(lastNumber));
+  }
+  if (lastOperator == "-") {
+    newNumber = String(Number(current) - Number(lastNumber));
+  }
+  if (lastOperator == "/") {
+    newNumber = String(Number(current) / Number(lastNumber));
+  }
+  setCurrent(newNumber);
+  setShown(newNumber);
+  setLastNumber("");
 }
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -129,35 +188,35 @@ function onNumber(number:String) {
               <NumberView title = '1' onPress={onNumber}/>
               <NumberView title = '2' onPress={onNumber}/>
               <NumberView title = '3' onPress={onNumber}/>
-              <Operand title = "+"></Operand>
+              <Operator title = "+" onPress = {onOperator}/>
             </View>
 
             <View style={styles.container}>
             <NumberView title = '4' onPress={onNumber}/>
             <NumberView title = '5' onPress={onNumber}/>
             <NumberView title = '6' onPress={onNumber}/>
-            <Operand title = "*"></Operand>
+            <Operator title = "*" onPress = {onOperator}/>
             </View>
 
             <View style={styles.container}>
             <NumberView title = '7' onPress={onNumber}/>
             <NumberView title = '8' onPress={onNumber}/>
             <NumberView title = '9' onPress={onNumber}/>
-            <Operand title = "-"></Operand>
+            <Operator title = "-" onPress = {onOperator}/>
             </View>
 
             <View style={styles.container}>
-              <View style={styles.buttonContainer}>
-                <Button color= "#889186" title="="/>
-              </View>
+              <SpecialButton title = "=" onPress = {onEquality}/>
               <NumberView title = '0' onPress={onNumber}></NumberView>
-              <View style={styles.buttonContainer}>
-                <Button color = "#889186"title="."/>
-              </View>
-              <Operand title = "/" />
+              <NumberView title = '.' onPress={onNumber}/>
+              <Operator title = "/" onPress = {onOperator}/>
+            </View>
+
+            <View style={styles.container}>
+              <SpecialButton title = "clear" onPress={onClear}/>
             </View>
         </View>
-          
+  
         </View>
       </ScrollView>
     </SafeAreaView>
